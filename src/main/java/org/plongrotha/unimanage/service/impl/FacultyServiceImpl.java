@@ -93,7 +93,6 @@ public class FacultyServiceImpl implements FacultyService {
         Page<Faculty> faculties = facultyRepository.findAllFacultyPage(pageable);
         return facultyMapper.toPageResponse(faculties);
     }
-
     @CacheEvict(value = "faculties", allEntries = true)
     @Override
     public void deleteAllFactory() {
