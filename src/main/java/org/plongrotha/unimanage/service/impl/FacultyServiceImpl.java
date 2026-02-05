@@ -12,8 +12,8 @@ import org.plongrotha.unimanage.model.Faculty;
 import org.plongrotha.unimanage.repository.FacultyRepository;
 import org.plongrotha.unimanage.service.FacultyService;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +30,7 @@ public class FacultyServiceImpl implements FacultyService {
     private final FacultyRepository facultyRepository;
     private final FacultyMapper facultyMapper;
 
+    @CacheEvict(value = "all_faculty", allEntries = true)
     @Override
     public void createFaculty(Faculty faculty) {
         var createFaculty = new Faculty();
@@ -40,7 +41,8 @@ public class FacultyServiceImpl implements FacultyService {
     }
 
     @Transactional
-    @CachePut(value = "faculties", key = "#id")
+    @Caching(evict = { @CacheEvict(value = "faculties", key = "#id"),
+            @CacheEvict(value = "all_faculty", allEntries = true) })
     @Override
     public void updateFaculty(Long id, Faculty faculty) {
         var createFaculty = facultyRepository.findById(id)
@@ -50,13 +52,15 @@ public class FacultyServiceImpl implements FacultyService {
         facultyRepository.save(createFaculty);
     }
 
-    @Cacheable(value = "faculties", key = "#id")
+    @Cacheable(value = "faculties", key = "#id", unless = "#result == null")
     @Override
     public Faculty getFacultyById(Long id) {
-        return facultyRepository.findById(id).orElseThrow(() -> new NotFoundException("factory is not found"));
+        return facultyRepository.findById(id).orElse(null);
     }
 
-    @CacheEvict(value = "faculties", key = "#id")
+    @Caching(evict = { @CacheEvict(value = "faculties", key = "#id"),
+            @CacheEvict(value = "all_faculty", allEntries = true),
+            @CacheEvict(value = "faculty_page", allEntries = true) })
     @Override
     public void deleteFactory(Long id) {
         var createFaculty = facultyRepository.findById(id)
@@ -64,14 +68,14 @@ public class FacultyServiceImpl implements FacultyService {
         facultyRepository.delete(createFaculty);
     }
 
-    @Cacheable(value = "all_faculty", unless = "#result.empty")
+    @Cacheable(value = "all_faculty", unless = "#result == null || #result.isEmpty()")
     @Override
     public List<FacultyResponse> getAllFaculty() {
         var facultyList = facultyRepository.findAll();
         return facultyList.isEmpty() ? List.of() : facultyMapper.toResponseList(facultyList);
     }
 
-    @Cacheable(value = "departments", key = "#facultyId", unless = "#result.empty")
+    @Cacheable(value = "departments", key = "#facultyId", unless = "#result == null")
     @Override
     public List<Department> getAllDepartmentWithFactoryId(Long facultyId) {
         var faculty = facultyRepository.findById(facultyId)
@@ -80,13 +84,9 @@ public class FacultyServiceImpl implements FacultyService {
         return departmentList.isEmpty() ? List.of() : departmentList;
     }
 
-    @CacheEvict(value = { "faculties", "departments", "all_faculty" }, allEntries = true)
-    @Override
-    public void clearAllCache() {
-        log.info("clear cache is called");
-    }
-
-    @Cacheable(value = "faculty_page", key = "'page_' + #page + '_size_' + #size", unless = "#result.empty")
+    // @Cacheable(value = "faculty_page", key = "'page_' + #page + '_size_' +
+    // #size", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = "faculty_page", key = "#page + '-' + #size", unless = "#result == null")
     @Override
     public PageResponse<FacultyResponse> allFacultyPagination(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -94,7 +94,8 @@ public class FacultyServiceImpl implements FacultyService {
         return facultyMapper.toPageResponse(faculties);
     }
 
-    @CacheEvict(value = "faculties", allEntries = true)
+    @Caching(evict = { @CacheEvict(value = "faculties", allEntries = true),
+            @CacheEvict(value = "all_faculty", allEntries = true) })
     @Override
     public void deleteAllFactory() {
         var facultyList = facultyRepository.findAll();
@@ -102,5 +103,27 @@ public class FacultyServiceImpl implements FacultyService {
             throw new NotFoundException("no faculty to delete");
         }
         facultyRepository.deleteAll(facultyList);
+    }
+
+    @Caching(evict = { @CacheEvict(value = "faculties", allEntries = true),
+            @CacheEvict(value = "all_faculty", allEntries = true),
+            @CacheEvict(value = "faculty_page", allEntries = true) })
+    @Override
+    public void createBulkFaculty(List<Faculty> faculties) {
+        var facultyEntities = faculties.stream().map(faculty -> {
+            var createFaculty = new Faculty();
+            createFaculty.setFacultyCode(faculty.getFacultyCode());
+            createFaculty.setFacultyName(faculty.getFacultyName());
+            createFaculty.setStatus("ACTIVE");
+            return createFaculty;
+        }).toList();
+        facultyRepository.saveAll(facultyEntities);
+        log.info("Created {} faculties", facultyEntities.size());
+    }
+
+    @CacheEvict(value = { "faculties", "departments", "all_faculty" }, allEntries = true)
+    @Override
+    public void clearAllCache() {
+        log.info("clear cache is called");
     }
 }

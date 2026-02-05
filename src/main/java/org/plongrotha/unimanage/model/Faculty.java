@@ -17,9 +17,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Faculty implements Serializable {
-
     private static final long serialVersionUID = 1L;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long facultyId;
@@ -36,11 +34,15 @@ public class Faculty implements Serializable {
     @OneToMany(mappedBy = "faculty")
     @JsonManagedReference
     @JsonIgnore
-//    @Transient
     private List<Department> departments;
 
     @PrePersist
     void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
         this.createdAt = LocalDateTime.now();
     }
 }

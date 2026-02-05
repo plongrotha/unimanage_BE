@@ -25,5 +25,7 @@ public interface FacultyService {
 
     PageResponse<FacultyResponse> allFacultyPagination(int page, int size);
 
+    void createBulkFaculty(List<Faculty> faculties);
+
     void clearAllCache();
 }

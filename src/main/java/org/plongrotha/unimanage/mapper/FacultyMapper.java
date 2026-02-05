@@ -21,6 +21,8 @@ public interface FacultyMapper {
 
     FacultyResponse toResponse(Faculty faculty);
 
+    List<Faculty> toEntity(List<FacultyRequest> requests);
+
     List<FacultyResponse> toResponseList(List<Faculty> faculties);
 
     default PageResponse<FacultyResponse> toPageResponse(Page<Faculty> hotels) {

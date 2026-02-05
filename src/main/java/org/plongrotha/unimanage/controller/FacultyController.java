@@ -49,7 +49,8 @@ public class FacultyController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<FacultyResponse>> getFacultyById(@PathVariable @Positive Long id) {
         Faculty faculty = facultyService.getFacultyById(id);
-        return ResponseEntity.ok(ResponseUtil.ok(facultyMapper.toResponse(faculty), "Faculty retrieved successfully"));
+        var response = facultyMapper.toResponse(faculty);
+        return ResponseEntity.ok(ResponseUtil.ok(response, "Faculty retrieved successfully"));
     }
 
     @Operation(summary = "Get All Departments by Faculty ID", description = "Retrieve all departments associated with a specific faculty ID")
@@ -57,7 +58,8 @@ public class FacultyController {
     public ResponseEntity<ApiResponse<List<DepartmentResponse>>> getAllDepartmentByFacultyId(
             @PathVariable @Positive Long id) {
         var departmentList = facultyService.getAllDepartmentWithFactoryId(id);
-        return ResponseEntity.ok(ResponseUtil.ok(departmentMapper.toResponse(departmentList),
+        var response = departmentMapper.toResponse(departmentList);
+        return ResponseEntity.ok(ResponseUtil.ok(response,
                 departmentList.isEmpty() ? "no have department in faculty" : "departments retrieved successfully"));
     }
 
@@ -86,9 +88,18 @@ public class FacultyController {
 
     @Operation(summary = "Update Faculty By Id")
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> updateFacultyById(@PathVariable Long id, @RequestBody FacultyRequest request) {
+    public ResponseEntity<ApiResponse<Void>> updateFacultyById(@PathVariable Long id,
+            @RequestBody FacultyRequest request) {
         facultyService.updateFaculty(id, facultyMapper.toEntity(request));
-        return ResponseEntity.ok(ResponseUtil.ok(null,"faculty updated successfully"));
+        return ResponseEntity.ok(ResponseUtil.ok(null, "faculty updated successfully"));
+    }
+
+    @Operation(summary = "Create Bulk Faculties", description = "Create multiple faculties in bulk")
+    @PostMapping("/bulk")
+    public ResponseEntity<ApiResponse<Void>> createBulkFaculty(@RequestBody List<FacultyRequest> requests) {
+        var faculties = facultyMapper.toEntity(requests);
+        facultyService.createBulkFaculty(faculties);
+        return ResponseEntity.ok(ResponseUtil.created(null, "bulk faculties created successfully"));
     }
 
     @Operation(summary = "Clear Faculty Cache", description = "Clear all cached faculty data")
