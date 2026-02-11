@@ -53,6 +53,7 @@ public class FacultyController {
         return ResponseEntity.ok(ResponseUtil.ok(response, "Faculty retrieved successfully"));
     }
 
+    @Deprecated
     @Operation(summary = "Get All Departments by Faculty ID", description = "Retrieve all departments associated with a specific faculty ID")
     @GetMapping("/{id}/departments")
     public ResponseEntity<ApiResponse<List<DepartmentResponse>>> getAllDepartmentByFacultyId(

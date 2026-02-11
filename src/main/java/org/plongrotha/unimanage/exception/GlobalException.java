@@ -1,5 +1,6 @@
 package org.plongrotha.unimanage.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -77,6 +78,21 @@ public class GlobalException {
         ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problemDetail.setTitle("Method Parameter Validation Failed");
         problemDetail.setProperties(Map.of("timestamp", LocalDateTime.now(), "errors", errors));
+        return problemDetail;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        // Create ProblemDetail with 409 Conflict status
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "Cannot delete or update this record because it is being used by other entities (e.g., Departments).");
+        problemDetail.setTitle("Database Dependency Conflict");
+        // problemDetail.setType(URI.create("https://api.yourdomain.com/errors/dependency-conflict"));
+
+        // Optional: Add extra info using 'setProperty'
+        problemDetail.setProperty("timestamp", Instant.now());
+
         return problemDetail;
     }
 }

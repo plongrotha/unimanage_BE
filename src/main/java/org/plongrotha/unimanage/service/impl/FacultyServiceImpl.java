@@ -14,6 +14,7 @@ import org.plongrotha.unimanage.service.FacultyService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,8 +42,12 @@ public class FacultyServiceImpl implements FacultyService {
     }
 
     @Transactional
-    @Caching(evict = { @CacheEvict(value = "faculties", key = "#id"),
-            @CacheEvict(value = "all_faculty", allEntries = true) })
+    @Caching(evict = { @CacheEvict(value = "all_faculty", allEntries = true),
+            @CacheEvict(value = "faculty_page", allEntries = true)
+
+    })
+
+    @CacheEvict(value = "faculties", key = "#id")
     @Override
     public void updateFaculty(Long id, Faculty faculty) {
         var createFaculty = facultyRepository.findById(id)
@@ -63,9 +68,12 @@ public class FacultyServiceImpl implements FacultyService {
             @CacheEvict(value = "faculty_page", allEntries = true) })
     @Override
     public void deleteFactory(Long id) {
-        var createFaculty = facultyRepository.findById(id)
+        var deleteFaculty = facultyRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("factory is not found"));
-        facultyRepository.delete(createFaculty);
+        if (!deleteFaculty.getDepartments().isEmpty()) {
+            throw new DataIntegrityViolationException("Cannot delete faculty because it has assigned departments");
+        }
+        facultyRepository.delete(deleteFaculty);
     }
 
     @Cacheable(value = "all_faculty", unless = "#result == null || #result.isEmpty()")
@@ -121,7 +129,7 @@ public class FacultyServiceImpl implements FacultyService {
         log.info("Created {} faculties", facultyEntities.size());
     }
 
-    @CacheEvict(value = { "faculties", "departments", "all_faculty" }, allEntries = true)
+    @CacheEvict(value = { "faculties", "departments", "all_faculty", "faculty_page" }, allEntries = true)
     @Override
     public void clearAllCache() {
         log.info("clear cache is called");

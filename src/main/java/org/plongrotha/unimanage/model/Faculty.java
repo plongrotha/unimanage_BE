@@ -31,6 +31,8 @@ public class Faculty implements Serializable {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    private LocalDateTime updatedAt;
+
     @OneToMany(mappedBy = "faculty")
     @JsonManagedReference
     @JsonIgnore

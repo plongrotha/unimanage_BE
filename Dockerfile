@@ -8,7 +8,6 @@ WORKDIR /app
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
-# If using Gradle, copy: build.gradle settings.gradle gradlew gradle/
 
 # Copy source code
 COPY src src
@@ -16,6 +15,7 @@ COPY src src
 # Build the application (skip tests for faster builds)
 RUN ./mvnw clean package -DskipTests
 # For Gradle: RUN ./gradlew build -x test
+RUN jar -tf target/*.jar | grep UniManageBeApplication
 
 # Production stage
 FROM eclipse-temurin:21-jre-alpine

@@ -16,6 +16,7 @@ public interface FacultyMapper {
     @Mapping(target = "facultyId", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "departments", ignore = true)
     Faculty toEntity(FacultyRequest request);
 

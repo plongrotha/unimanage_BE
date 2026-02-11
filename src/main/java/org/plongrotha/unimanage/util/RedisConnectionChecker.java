@@ -1,36 +1,33 @@
 package org.plongrotha.unimanage.util;
 
 import jakarta.annotation.PostConstruct;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class RedisConnectionChecker {
 
-    private static final Logger log = LoggerFactory.getLogger(RedisConnectionChecker.class);
-
     private final RedisTemplate<String, Object> redisTemplate;
 
-    public RedisConnectionChecker(RedisTemplate<String, Object> redisTemplate) {
+    public RedisConnectionChecker(@Lazy RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     @PostConstruct
     public void checkConnection() {
         try {
-            assert redisTemplate.getConnectionFactory() != null;
-            String ping = redisTemplate.getConnectionFactory().getConnection().ping();
-            log.info("========================================");
-            log.info("✅ REDIS CONNECTION SUCCESSFUL!");
-            log.info("📡 Response: {}", ping);
-            log.info("========================================");
+            var connectionFactory = redisTemplate.getConnectionFactory();
+            if (connectionFactory != null) {
+                String ping = connectionFactory.getConnection().ping();
+                log.info("✅ REDIS CONNECTION SUCCESSFUL: {}", ping);
+            }
         } catch (Exception e) {
-            log.error("========================================");
-            log.error("❌ REDIS CONNECTION FAILED!");
-            log.error("Error: {}", e.getMessage());
-            log.error("========================================");
+            log.error("❌ REDIS CONNECTION FAILED! App will fallback to Database.");
+            log.error("Reason: {}", e.getMessage());
         }
     }
 }

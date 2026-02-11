@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -20,5 +19,6 @@ public class FacultyResponse implements Serializable {
     private String facultyCode;
     private String facultyName;
     private String status;
-    private LocalDateTime createdAt;
+    private String createdAt;
+    private String updatedAt;
 }

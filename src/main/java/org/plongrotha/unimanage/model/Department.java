@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,6 +26,9 @@ public class Department implements Serializable {
 
     private String description;
 
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
     @OneToMany(mappedBy = "department")
     @JsonManagedReference
     @JsonIgnore
@@ -33,4 +37,14 @@ public class Department implements Serializable {
     @ManyToOne
     @JoinColumn(name = "faculty_id")
     private Faculty faculty;
+
+    @PrePersist
+    void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

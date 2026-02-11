@@ -14,7 +14,10 @@ public class DepartmentResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     private Long departmentId;
-    private String departmentName;
-    private String description;
     private Long facultyId;
+    private String departmentName;
+    private String facultyName;
+    private String description;
+    private String createdAt;
+    private String updatedAt;
 }

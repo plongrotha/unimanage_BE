@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # Your Spring Boot Backend
   backend:
@@ -9,13 +7,16 @@ services:
       - "8080:8080"
     environment:
       # Database connection
+      - SPRING_PROFILES_ACTIVE=prod
       - DATABASE_URL=jdbc:mysql://mysql:3306/unimanage-db
       - DATABASE_USERNAME=root
       - DATABASE_PASSWORD=9787
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
 
       # Redis connection
       - REDIS_HOST=redis-unimanage
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=
 
       # Server configuration
       - SERVER_PORT=8080
@@ -34,7 +35,7 @@ services:
       - MYSQL_ROOT_PASSWORD=9787
       - MYSQL_DATABASE=unimanage-db
     ports:
-      - "3307:3306" # Changed: Access via localhost:3307 instead
+      - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
