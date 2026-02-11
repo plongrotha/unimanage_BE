@@ -10,5 +10,4 @@ public class UniManageBeApplication {
     public static void main(String[] args) {
         SpringApplication.run(UniManageBeApplication.class, args);
     }
-
 }
