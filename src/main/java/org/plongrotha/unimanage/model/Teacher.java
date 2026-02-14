@@ -5,9 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.plongrotha.unimanage.enums.Gender;
 
@@ -19,10 +22,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @NoArgsConstructor
 public class Teacher implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "teacher_id")
     private Long teacherId;
 
     @Column(name = "first_name")
@@ -52,9 +57,8 @@ public class Teacher implements Serializable {
     private LocalDateTime updatedAt;
 
     @JsonIgnore
-    @ManyToOne
-    @JoinColumn(name = "department_id")
-    private Department department;
+    @OneToMany(mappedBy = "teacher")
+    private List<TeacherCourse> assignments = new ArrayList<>();
 
     @PrePersist
     void prePersist() {

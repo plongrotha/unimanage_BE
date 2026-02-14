@@ -5,10 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
 
 @Slf4j
-@Component
 public class RedisConnectionChecker {
 
     private final RedisTemplate<String, Object> redisTemplate;

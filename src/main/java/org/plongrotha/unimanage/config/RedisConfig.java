@@ -1,5 +1,6 @@
 package org.plongrotha.unimanage.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
@@ -21,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import lombok.extern.slf4j.Slf4j;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.time.Duration;
 
@@ -28,6 +31,12 @@ import java.time.Duration;
 @Slf4j
 @Configuration
 public class RedisConfig implements CachingConfigurer {
+
+    @Value("${spring.redis.host}")
+    private String host;
+
+    @Value("${spring.redis.port}")
+    private int port;
 
     @Override
     public CacheErrorHandler errorHandler() {
@@ -54,7 +63,6 @@ public class RedisConfig implements CachingConfigurer {
         };
     }
 
-    @Bean
     RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
@@ -67,7 +75,6 @@ public class RedisConfig implements CachingConfigurer {
         return template;
     }
 
-    @Bean
     CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         RedisCacheConfiguration config = RedisCacheConfiguration
                 .defaultCacheConfig()
@@ -86,6 +93,27 @@ public class RedisConfig implements CachingConfigurer {
                 ObjectMapper.DefaultTyping.NON_FINAL,
                 JsonTypeInfo.As.PROPERTY);
         return new GenericJackson2JsonRedisSerializer(objectMapper);
+    }
+
+    private JedisPoolConfig jedisPoolConfig() {
+        JedisPoolConfig poolConfig = new JedisPoolConfig();
+        poolConfig.setMaxTotal(128);
+        poolConfig.setMaxIdle(128);
+        poolConfig.setMinIdle(16);
+        poolConfig.setTestOnBorrow(true);
+        poolConfig.setTestOnReturn(true);
+        poolConfig.setTestWhileIdle(true);
+        poolConfig.setMinEvictableIdleDuration(Duration.ofSeconds(60));
+        poolConfig.setTimeBetweenEvictionRuns(Duration.ofSeconds(60));
+        poolConfig.setNumTestsPerEvictionRun(3);
+        poolConfig.setBlockWhenExhausted(true);
+
+        return poolConfig;
+    }
+
+    @Bean
+    public JedisPool jedisPool() {
+        return new JedisPool(jedisPoolConfig(), host, port, 5000);
     }
 
 }

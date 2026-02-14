@@ -4,18 +4,14 @@ import java.util.List;
 
 import org.plongrotha.unimanage.dto.req.TeacherRequest;
 import org.plongrotha.unimanage.dto.res.ApiResponse;
+import org.plongrotha.unimanage.dto.res.TeacherCourseReponse;
 import org.plongrotha.unimanage.dto.res.TeacherResponse;
+import org.plongrotha.unimanage.enums.Gender;
 import org.plongrotha.unimanage.service.TeacherService;
 import org.plongrotha.unimanage.util.ResponseUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -66,5 +62,26 @@ public class TeacherController {
         var teachers = teacherService.getAllTeachers();
         return ResponseEntity.ok(ResponseUtil.success(teachers,
                 teachers.isEmpty() ? "No teachers found" : "Teachers retrieved successfully"));
+    }
+
+    @GetMapping("/genders")
+    public ResponseEntity<ApiResponse<List<Gender>>> getGenders() {
+        var gender = teacherService.getAllGender();
+        return ResponseEntity.ok(ResponseUtil.ok(gender));
+    }
+
+    @GetMapping("/by")
+    public ResponseEntity<ApiResponse<List<TeacherResponse>>> getAllTeacherByGender(@RequestParam Gender gender) {
+        var byGender = teacherService.getAllTeacherByGender(gender);
+        return ResponseEntity
+                .ok(ResponseUtil.ok(byGender, byGender.isEmpty() ? "No teachers found with gender " + gender
+                        : "Teachers retrieved successfully"));
+    }
+
+    @GetMapping("/{teacherId}/courses")
+    public ResponseEntity<ApiResponse<TeacherCourseReponse>> getAllCourseTeacherTeach(
+            @PathVariable @Positive Long teacherId) {
+        var response = teacherService.getAllCourseTeacherTeach(teacherId);
+        return ResponseEntity.ok(ResponseUtil.ok(response, "Courses retrieved successfully"));
     }
 }

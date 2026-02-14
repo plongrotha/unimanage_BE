@@ -86,7 +86,7 @@ public class GlobalException {
         // Create ProblemDetail with 409 Conflict status
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT,
-                "Cannot delete or update this record because it is being used by other entities (e.g., Departments).");
+                "Data integrity violation: " + ex.getMostSpecificCause().getMessage());
         problemDetail.setTitle("Database Dependency Conflict");
         // problemDetail.setType(URI.create("https://api.yourdomain.com/errors/dependency-conflict"));
 

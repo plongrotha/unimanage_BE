@@ -3,9 +3,14 @@ package org.plongrotha.unimanage.service;
 import java.util.List;
 
 import org.plongrotha.unimanage.dto.req.TeacherRequest;
+import org.plongrotha.unimanage.dto.res.TeacherCourseReponse;
 import org.plongrotha.unimanage.dto.res.TeacherResponse;
+import org.plongrotha.unimanage.enums.Gender;
 
 public interface TeacherService {
+
+    List<Gender> getAllGender();
+
     void createTeacher(TeacherRequest teacherRequest);
 
     void createBulkTeachers(List<TeacherRequest> teacherRequests);
@@ -15,4 +20,8 @@ public interface TeacherService {
     void deleteTeacher(Long teacherId);
 
     List<TeacherResponse> getAllTeachers();
+
+    List<TeacherResponse> getAllTeacherByGender(Gender gender);
+
+    TeacherCourseReponse getAllCourseTeacherTeach(Long teacherId);
 }

@@ -5,10 +5,14 @@ import java.time.Period;
 import java.util.List;
 
 import org.plongrotha.unimanage.dto.req.TeacherRequest;
+import org.plongrotha.unimanage.dto.res.TeacherCourseReponse;
 import org.plongrotha.unimanage.dto.res.TeacherResponse;
+import org.plongrotha.unimanage.enums.Gender;
 import org.plongrotha.unimanage.exception.NotFoundException;
 import org.plongrotha.unimanage.mapper.TeacherMapper;
+import org.plongrotha.unimanage.model.Course;
 import org.plongrotha.unimanage.model.Teacher;
+import org.plongrotha.unimanage.repository.TeacherCourseRepository;
 import org.plongrotha.unimanage.repository.TeacherRepository;
 import org.plongrotha.unimanage.service.TeacherService;
 import org.springframework.cache.annotation.CacheEvict;
@@ -23,7 +27,13 @@ import lombok.RequiredArgsConstructor;
 public class TeacherServiceImpl implements TeacherService {
 
     private final TeacherRepository teacherRepository;
+    private final TeacherCourseRepository teacherCourseRepository;
     private final TeacherMapper teacherMapper;
+
+    @Override
+    public List<Gender> getAllGender() {
+        return List.of(Gender.values());
+    }
 
     @Caching(evict = { @CacheEvict(value = "teachers", allEntries = true),
             @CacheEvict(value = "teachersAll", allEntries = true) })
@@ -93,5 +103,19 @@ public class TeacherServiceImpl implements TeacherService {
     public List<TeacherResponse> getAllTeachers() {
         var teachers = teacherRepository.findAll();
         return teachers.isEmpty() ? List.of() : teacherMapper.toResponseList(teachers);
+    }
+
+    @Override
+    public List<TeacherResponse> getAllTeacherByGender(Gender gender) {
+        var teacherList = teacherRepository.findAllByGender(gender);
+        return teacherList.isEmpty() ? List.of() : teacherMapper.toResponseList(teacherList);
+    }
+
+    @Override
+    public TeacherCourseReponse getAllCourseTeacherTeach(Long teacherId) {
+        Teacher teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new NotFoundException("Teacher not found"));
+        List<Course> courses = teacherCourseRepository.findAllByTeacher_TeacherId(teacher.getTeacherId());
+        return teacherMapper.toTeacherCourseResponse(teacher, courses);
     }
 }
