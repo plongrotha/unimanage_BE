@@ -21,6 +21,7 @@ public class TeacherRequest {
     private String lastName;
 
     @NotNull(message = "Gender must not be null")
+    @Schema(description = "Gender of the teacher", example = "MALE")
     private Gender gender;
 
     @Schema(description = "Date of birth in the format YYYY-MM-DD", example = "2000-01-01")
@@ -34,5 +35,6 @@ public class TeacherRequest {
     @Email(message = "Email should be valid")
     private String email;
 
+    @Schema(description = "Phone number of the teacher", example = "+85512345678")
     private String phone;
 }

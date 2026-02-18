@@ -2,6 +2,7 @@ package org.plongrotha.unimanage.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.plongrotha.unimanage.dto.res.ApiResponse;
 import org.plongrotha.unimanage.dto.res.TeacherCourseResponse;
 import org.plongrotha.unimanage.model.Teacher;
@@ -24,29 +25,33 @@ public class TeacherCourseController {
 
     private final TeacherCourseService teacherCourseService;
 
+    @Operation(summary = "Assign course to teacher")
     @PostMapping("/assign")
     public ResponseEntity<ApiResponse<Void>> assignCourseToTeacher(@RequestParam Long teacherId,
             @RequestParam Long courseId) {
         teacherCourseService.assignCourseToTeacher(teacherId, courseId);
-        return ResponseEntity.ok(ResponseUtil.success(null, "Course assigned to teacher successfully"));
+        return ResponseUtil.success(null, "Course assigned to teacher successfully");
     }
 
+    @Operation(summary = "remove course from teacher")
     @DeleteMapping("/remove")
     public ResponseEntity<ApiResponse<Void>> removeCourseFromTeacher(@RequestParam Long teacherId,
             @RequestParam Long courseId) {
         teacherCourseService.removeCourseFromTeacher(teacherId, courseId);
-        return ResponseEntity.ok(ResponseUtil.success(null, "Course removed from teacher successfully"));
+        return ResponseUtil.success(null, "Course removed from teacher successfully");
     }
 
+    @Operation(summary = "Get all teacher by courseId")
     @GetMapping("/teachers")
     public ResponseEntity<ApiResponse<List<Teacher>>> getTeachersByCourseId(@RequestParam Long courseId) {
         var teachers = teacherCourseService.getTeachersByCourseId(courseId);
-        return ResponseEntity.ok(ResponseUtil.success(teachers, "Teachers retrieved successfully"));
+        return ResponseUtil.success(teachers, "Teachers retrieved successfully");
     }
 
+    @Operation(summary = "Get All TeacherCourse")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TeacherCourseResponse>>> getAllTeacherCoruse() {
+    public ResponseEntity<ApiResponse<List<TeacherCourseResponse>>> getAllTeacherCourse() {
         var teacherCourses = teacherCourseService.getAllTeacherCoruse();
-        return ResponseEntity.ok(ResponseUtil.success(teacherCourses, "Teacher courses retrieved successfully"));
+        return ResponseUtil.success(teacherCourses, "Teacher courses retrieved successfully");
     }
 }

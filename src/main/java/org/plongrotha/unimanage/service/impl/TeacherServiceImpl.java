@@ -2,12 +2,14 @@ package org.plongrotha.unimanage.service.impl;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Arrays;
 import java.util.List;
 
 import org.plongrotha.unimanage.dto.req.TeacherRequest;
 import org.plongrotha.unimanage.dto.res.TeacherCourseReponse;
 import org.plongrotha.unimanage.dto.res.TeacherResponse;
 import org.plongrotha.unimanage.enums.Gender;
+import org.plongrotha.unimanage.exception.BadRequestException;
 import org.plongrotha.unimanage.exception.NotFoundException;
 import org.plongrotha.unimanage.mapper.TeacherMapper;
 import org.plongrotha.unimanage.model.Course;
@@ -21,6 +23,10 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import org.plongrotha.unimanage.dto.res.PageResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 @RequiredArgsConstructor
 @Service
@@ -39,20 +45,7 @@ public class TeacherServiceImpl implements TeacherService {
             @CacheEvict(value = "teachersAll", allEntries = true) })
     @Override
     public void createTeacher(TeacherRequest teacherRequest) {
-        var teacher = new Teacher();
-        teacher.setFirstName(teacherRequest.getFirstName());
-        teacher.setLastName(teacherRequest.getLastName());
-
-        if (teacherRepository.existsByEmail(teacherRequest.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-
-        teacher.setEmail(teacherRequest.getEmail());
-        teacher.setPhone(teacherRequest.getPhone());
-        teacher.setAddress(teacherRequest.getAddress());
-        teacher.setGender(teacherRequest.getGender());
-        teacher.setDob(teacherRequest.getDob());
-        teacher.setAge(Period.between(teacherRequest.getDob(), LocalDate.now()).getYears());
+        var teacher = create(teacherRequest);
         teacherRepository.save(teacher);
     }
 
@@ -78,23 +71,7 @@ public class TeacherServiceImpl implements TeacherService {
             @CacheEvict(value = "teachersAll", allEntries = true) })
     @Override
     public void createBulkTeachers(List<TeacherRequest> teacherRequests) {
-        var teachers = teacherRequests.stream().map(teacher -> {
-            var entity = new Teacher();
-            entity.setFirstName(teacher.getFirstName());
-            entity.setLastName(teacher.getLastName());
-
-            if (teacherRepository.existsByEmail(teacher.getEmail())) {
-                throw new IllegalArgumentException("Email already exists: " + teacher.getEmail());
-            }
-            entity.setEmail(teacher.getEmail());
-
-            entity.setPhone(teacher.getPhone());
-            entity.setAddress(teacher.getAddress());
-            entity.setGender(teacher.getGender());
-            entity.setDob(teacher.getDob());
-            entity.setAge(Period.between(teacher.getDob(), LocalDate.now()).getYears());
-            return entity;
-        }).toList();
+        var teachers = teacherRequests.stream().map(this::create).toList();
         teacherRepository.saveAll(teachers);
     }
 
@@ -105,17 +82,69 @@ public class TeacherServiceImpl implements TeacherService {
         return teachers.isEmpty() ? List.of() : teacherMapper.toResponseList(teachers);
     }
 
+    @Cacheable(value = "genders", key = "#gender", unless = "#result == null || #result.isEmpty()")
     @Override
     public List<TeacherResponse> getAllTeacherByGender(Gender gender) {
         var teacherList = teacherRepository.findAllByGender(gender);
-        return teacherList.isEmpty() ? List.of() : teacherMapper.toResponseList(teacherList);
+        return teacherMapper.toResponseList(teacherList);
     }
 
+    @Caching(evict = { @CacheEvict(value = "teachers", key = "#teacherId"),
+            @CacheEvict(value = "teachersAll", allEntries = true) })
     @Override
     public TeacherCourseReponse getAllCourseTeacherTeach(Long teacherId) {
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new NotFoundException("Teacher not found"));
         List<Course> courses = teacherCourseRepository.findAllByTeacher_TeacherId(teacher.getTeacherId());
-        return teacherMapper.toTeacherCourseResponse(teacher, courses);
+        return teacherMapper.toTeacherCourseResponse(teacher, courses.isEmpty() ? List.of() : courses);
     }
+
+    private Teacher create(TeacherRequest teacherRequest) {
+        var teacher = new Teacher();
+        teacher.setFirstName(teacherRequest.getFirstName().trim().toLowerCase());
+        teacher.setLastName(teacherRequest.getLastName().trim().toLowerCase());
+
+        if (teacherRepository.existsByEmail(teacherRequest.getEmail())) {
+            throw new BadRequestException("Email already exists");
+        }
+
+        teacher.setEmail(teacherRequest.getEmail());
+        teacher.setPhone(teacherRequest.getPhone());
+        teacher.setAddress(teacherRequest.getAddress());
+
+        if (!Arrays.asList(Gender.values()).contains(teacherRequest.getGender())) {
+            throw new IllegalArgumentException("Invalid gender value");
+        }
+
+        teacher.setGender(teacherRequest.getGender());
+        teacher.setDob(teacherRequest.getDob());
+        teacher.setAge(Period.between(teacherRequest.getDob(), LocalDate.now()).getYears());
+
+        return teacher;
+    }
+
+    @Override
+    public PageResponse<TeacherResponse> getAllTeacherPagination(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Teacher> teacherPagination = teacherRepository.findAllTeacher(pageable);
+        return teacherMapper.toPageResponse(teacherPagination);
+    }
+
+    @Override
+    public TeacherResponse updateTeacher(Long teacherId, TeacherRequest teacherRequest) {
+        var teacher = teacherRepository.findById(teacherId)
+                .orElseThrow(() -> new NotFoundException("Teacher not found"));
+
+        teacher.setFirstName(teacherRequest.getFirstName().toLowerCase());
+        teacher.setLastName(teacherRequest.getLastName().toLowerCase());
+        teacher.setEmail(teacherRequest.getEmail());
+        teacher.setPhone(teacherRequest.getPhone());
+        teacher.setAddress(teacherRequest.getAddress());
+        teacher.setGender(teacherRequest.getGender());
+        teacher.setDob(teacherRequest.getDob());
+        teacher.setAge(Period.between(teacherRequest.getDob(), LocalDate.now()).getYears());
+
+        return teacherMapper.toResponse(teacherRepository.save(teacher));
+    }
+
 }

@@ -38,5 +38,4 @@ public class PageResponse<T> implements Serializable {
         this.first = page.isFirst();
         this.empty = page.isEmpty();
     }
-
 }

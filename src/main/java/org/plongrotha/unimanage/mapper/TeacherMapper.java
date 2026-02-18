@@ -6,10 +6,12 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 import org.plongrotha.unimanage.dto.req.TeacherRequest;
+import org.plongrotha.unimanage.dto.res.PageResponse;
 import org.plongrotha.unimanage.dto.res.TeacherCourseReponse;
 import org.plongrotha.unimanage.dto.res.TeacherResponse;
 import org.plongrotha.unimanage.model.Course;
 import org.plongrotha.unimanage.model.Teacher;
+import org.springframework.data.domain.Page;
 
 @Mapper(componentModel = "spring")
 public interface TeacherMapper {
@@ -30,5 +32,17 @@ public interface TeacherMapper {
     TeacherResponse toResponse(Teacher teacher);
 
     TeacherCourseReponse toTeacherCourseResponse(Teacher teacher, List<Course> courses);
-
+    
+    default PageResponse<TeacherResponse> toPageResponse(Page<Teacher> teacher) {
+        return PageResponse.<TeacherResponse>builder()
+                .content(toResponseList(teacher.getContent()))
+                .pageNumber(teacher.getNumber())
+                .pageSize(teacher.getSize())
+                .totalElements(teacher.getTotalElements())
+                .totalPages(teacher.getTotalPages())
+                .last(teacher.isLast())
+                .first(teacher.isFirst())
+                .empty(teacher.isEmpty())
+                .build();
+    }
 }

@@ -1,12 +1,7 @@
 package org.plongrotha.unimanage.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CachingConfigurer;
-import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.interceptor.CacheErrorHandler;
-import org.springframework.cache.interceptor.SimpleCacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -27,42 +22,17 @@ import redis.clients.jedis.JedisPoolConfig;
 
 import java.time.Duration;
 
-@EnableCaching
 @Slf4j
 @Configuration
-public class RedisConfig implements CachingConfigurer {
+public class RedisConfig {
 
-    @Value("${spring.redis.host}")
+    @Value("${spring.data.redis.host}")
     private String host;
 
-    @Value("${spring.redis.port}")
+    @Value("${spring.data.redis.port}")
     private int port;
 
-    @Override
-    public CacheErrorHandler errorHandler() {
-        return new SimpleCacheErrorHandler() {
-            @Override
-            public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
-                log.error("Redis is down (GET): " + exception.getMessage());
-            }
-
-            @Override
-            public void handleCachePutError(RuntimeException exception, Cache cache, Object key, Object value) {
-                log.error("Redis is down (PUT): " + exception.getMessage());
-            }
-
-            @Override
-            public void handleCacheEvictError(RuntimeException exception, Cache cache, Object key) {
-                log.error("Redis is down (EVICT): " + exception.getMessage());
-            }
-
-            @Override
-            public void handleCacheClearError(RuntimeException exception, Cache cache) {
-                log.error("Redis is down (CLEAR): " + exception.getMessage());
-            }
-        };
-    }
-
+    @Bean
     RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
@@ -75,6 +45,7 @@ public class RedisConfig implements CachingConfigurer {
         return template;
     }
 
+    @Bean
     CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         RedisCacheConfiguration config = RedisCacheConfiguration
                 .defaultCacheConfig()
@@ -107,6 +78,7 @@ public class RedisConfig implements CachingConfigurer {
         poolConfig.setTimeBetweenEvictionRuns(Duration.ofSeconds(60));
         poolConfig.setNumTestsPerEvictionRun(3);
         poolConfig.setBlockWhenExhausted(true);
+        poolConfig.setJmxEnabled(false);
 
         return poolConfig;
     }
